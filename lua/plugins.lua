@@ -21,10 +21,9 @@ require("tokyonight").setup({
   }
 })
 
-
 require'nvim-treesitter.configs'.setup {
   -- A list of parser names, or "all" (the four listed parsers should always be installed)
-  ensure_installed = { "c", "cpp", "python", "help", "lua", "vim" },
+  ensure_installed = { "c", "cpp", "python", "lua", "vim" },
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
@@ -69,42 +68,91 @@ vim.opt.laststatus = 2
 vim.opt.showtabline = 2
 vim.opt.termguicolors = true
 
-require'staline'.setup {
+--require'staline'.setup {
+--
+--	sections = {
+--		left = {
+--			' ', 'right_sep', '-mode', 'left_sep', ' ',
+--			'right_sep', '-cwd', 'left_sep', ' ',
+--			'right_sep', '-branch', 'left_sep', ' ',
+--		},
+--		mid  = {'right_sep', 'lsp', 'left_sep', ' ', 'right_sep', '-file_name', 'left_sep', ' '},
+--		right= {
+--			'right_sep', '-cool_symbol', 'left_sep', ' ',
+--			'right_sep', '- ', '-lsp_name', '- ', 'left_sep',
+--			'right_sep', '-line_column', 'left_sep', ' ',
+--		}
+--	},
+--
+--	defaults={
+--		fg = "#986fec",
+--		cool_symbol = " ",
+--		left_separator = "",
+--		right_separator = "",
+--		-- line_column = "%l:%c [%L]",
+--		true_colors = true,
+--		line_column = "[%l:%c] 並%p%% "
+--		-- font_active = "bold"
+--	},
+--	mode_colors = {
+--		n  = "#181a23",
+--		i  = "#181a23",
+--		ic = "#181a23",
+--		c  = "#181a23",
+--		v  = "#181a23"       -- etc
+--	}
+--}
+-- local extensions = require('el.extensions')
+-- local subscribe = require('el.subscribe')
+-- local generator = function(_window, buffer)
+--     local el_segments = {}
+-- 
+--     -- Statusline options can be of several different types.
+--     -- Option 1, just a string.
+-- 
+--     table.insert(el_segments, '[creste pateul]')
+--     table.insert(el_segments, '                                             ')
+--     table.insert(el_segments, extensions.mode);
+--     table.insert(el_segments, '                                             ')
+--     table.insert(el_segments,
+--       subscribe.buf_autocmd(
+--         "el_file_icon",
+--         "BufRead",
+--         function(_, buffer)
+--           return extensions.file_icon(_, buffer)
+--         end
+--       )
+--     )
+--     table.insert(el_segments, '                                             ')
+--     table.insert(el_segments,
+--       subscribe.buf_autocmd(
+--         "el_git_branch",
+--         "BufEnter",
+--         function(window, buffer)
+--           local branch = extensions.git_branch(window, buffer)
+--           if branch then
+--             return branch
+--           end
+--         end
+--       )
+--     )
+-- 
+--     return el_segments
+-- end
 
-	sections = {
-		left = {
-			' ', 'right_sep', '-mode', 'left_sep', ' ',
-			'right_sep', '-cwd', 'left_sep', ' ',
-			'right_sep', '-branch', 'left_sep', ' ',
-		},
-		mid  = {'right_sep', 'lsp', 'left_sep', ' ', 'right_sep', '-file_name', 'left_sep', ' '},
-		right= {
-			'right_sep', '-cool_symbol', 'left_sep', ' ',
-			'right_sep', '- ', '-lsp_name', '- ', 'left_sep',
-			'right_sep', '-line_column', 'left_sep', ' ',
-		}
-	},
+-- And then when you're all done, just call
+-- require('el').setup({generator=generator})
+local function pate()
+  return [[creste pateul]]
+end
 
-	defaults={
-		fg = "#986fec",
-		cool_symbol = " ",
-		left_separator = "",
-		right_separator = "",
-		-- line_column = "%l:%c [%L]",
-		true_colors = true,
-		line_column = "[%l:%c] 並%p%% "
-		-- font_active = "bold"
-	},
-	mode_colors = {
-		n  = "#181a23",
-		i  = "#181a23",
-		ic = "#181a23",
-		c  = "#181a23",
-		v  = "#181a23"       -- etc
-	}
-}
+-- require('lualine').setup{
+--   options = { theme = 'powerline' }, 
+--   sections = { lualine_c = { 'filename', "[creste_pateul]" } }
+-- }
+require "lualine_config"
 
--- file manager 
+-- file manager
 require("nvim-tree").setup()
 
 
@@ -146,6 +194,19 @@ cmp.setup({
   require('lspconfig')['pyright'].setup {
     capabilities = capabilities
   }
+  
+  -- Dependency for fuzzy finder
+  local async = require "plenary.async"
+
+  -- Fuzzy finder
+  local builtin = require('telescope.builtin')
+  vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
+  vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
+  vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
+  vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
+
+  -- Markdown preview 
+  -- local md_preview = require "markdown-preview.nvim"
 
 return require('packer').startup(function(use)
   use 'wbthomason/packer.nvim' -- Package manager
@@ -186,5 +247,22 @@ return require('packer').startup(function(use)
     tag = 'nightly' -- optional, updated every week. (see issue #1193)
   }
   use 'nikvdp/neomux'
-end)
+  use "nvim-lua/plenary.nvim"
 
+  use 'tjdevries/express_line.nvim'
+  use {
+    'nvim-lualine/lualine.nvim',
+    requires = { 'nvim-tree/nvim-web-devicons', opt = true }
+  }
+  use {
+    'nvim-telescope/telescope.nvim', tag = '0.1.2',
+  -- or                            , branch = '0.1.x',
+    requires = { {'nvim-lua/plenary.nvim'} }
+  }
+  use({
+    "iamcco/markdown-preview.nvim", run = "cd app && npm install",
+    setup = function() vim.g.mkdp_filetypes = { "markdown" } end,
+    ft = { "markdown" }, 
+  })
+
+end)
